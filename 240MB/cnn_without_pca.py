@@ -1,4 +1,3 @@
-import os
 import pandas as pd
 import cv2
 import sys
@@ -9,6 +8,7 @@ from sklearn import preprocessing
 from sklearn.model_selection import train_test_split
 from tensorflow.keras import datasets, layers, models
 
+# Implementing CNN without PCA on X-ray images of COVID and other respiratory diseases (240MB data)
 
 def load_data(path):
     """

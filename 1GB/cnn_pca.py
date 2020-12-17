@@ -1,5 +1,4 @@
-import pandas as pd
-import sys
+import os
 import cv2
 import matplotlib.pyplot as plt
 import numpy as np
@@ -9,42 +8,36 @@ from sklearn.model_selection import train_test_split
 from tensorflow.keras import datasets, layers, models
 from sklearn.decomposition import PCA
 
+# Implementing CNN with PCA on radiography data (1GB data)
 
-def load_data(path):
+def load_radiography_data():
     """
-    This method will load annotations from "COVID-19 X-ray images" folder
+    This method will load radiography data from "COVID-19 Radiography Database" folder
 
-    :return: filenames, findings
+    :return: (train_images, train_labels), (test_images, test_labels)
     """
-    imgs = []
-    findings = []
-
-    df = pd.read_csv(path + "/metadata.csv")
-
-    for index, row in df.iterrows():
-        img = cv2.imread(path + "/images/" + row["filename"], cv2.IMREAD_GRAYSCALE)
+    # Load all Covid Images
+    images = []
+    labels = []
+    for filename in os.listdir(
+            os.path.join("COVID-19 Radiography Database", "COVID-19")):
+        img = cv2.imread(
+            os.path.join("COVID-19 Radiography Database", "COVID-19", filename), cv2.IMREAD_GRAYSCALE)
         if img is not None:
-            imgs.append(img)
-            findings.append(row["finding"])
+            images.append(img)
+            labels.append("covid")
 
-    return imgs, findings
+    count_covid_images = len(images)
 
-
-def get_smallest_dimensions():
-    # initialize with maxsize
-    min_w = sys.maxsize
-    min_h = sys.maxsize
-
-    for img in images:
-        width, height = img.shape
-        min_w = min(min_w, width)
-        min_h = min(min_h, height)
-
-    return min_w, min_h
-
-def resize_images():
-    for i in range(len(images)):
-        images[i] = cv2.resize(images[i], (min_width, min_height))
+    # Load all Normal (non-covid) Images
+    for filename in os.listdir(
+            os.path.join("COVID-19 Radiography Database", "NORMAL")):
+        img = cv2.imread(
+            os.path.join("COVID-19 Radiography Database", "NORMAL", filename), cv2.IMREAD_GRAYSCALE)
+        if img is not None and count_covid_images > 0:
+            images.append(img)
+            labels.append("normal")
+            count_covid_images = count_covid_images - 1
 
     X_train, X_test, y_train, y_test = train_test_split(images, labels, test_size=0.25, shuffle=True)
     return (np.array(X_train), np.array(y_train)), (np.array(X_test), np.array(y_test))
@@ -61,17 +54,17 @@ def preprocess_data():
     """
     le = preprocessing.LabelEncoder()
 
-    # applying pca
-    pca = PCA(n_components=256)
+    # applying pca and reducing to 512*512
+    pca = PCA(n_components=196)
 
-    train_images_reshaped = train_images.reshape(len(train_images), min_width * min_height)/255.0
-    test_images_reshaped = test_images.reshape(len(test_images), min_width * min_height)/255.0
+    train_images_reshaped = train_images.reshape(len(train_images), 1024 * 1024)/255.
+    test_images_reshaped = test_images.reshape(len(test_images), 1024 * 1024)/255.
 
     pca_train_images = pca.fit_transform(train_images_reshaped)
     pca_test_images = pca.transform(test_images_reshaped)
 
-    train_images_reshaped = pca_train_images.reshape(len(train_images), 16, 16, 1)
-    test_images_reshaped = pca_test_images.reshape(len(test_images), 16, 16, 1)
+    train_images_reshaped = pca_train_images.reshape(len(train_images), 14, 14, 1)
+    test_images_reshaped = pca_test_images.reshape(len(test_images), 14, 14, 1)
 
     # Normalize pixel values to be between 0 and 1
     return train_images_reshaped, test_images_reshaped, le.fit_transform(train_labels), le.fit_transform(test_labels)
@@ -85,7 +78,7 @@ def create_model():
     :return: model
     """
     model = models.Sequential()
-    model.add(layers.Conv2D(32, (3, 3), activation='relu', input_shape=(16, 16, 1)))
+    model.add(layers.Conv2D(32, (3, 3), activation='relu', input_shape=(14, 14, 1)))
     model.add(layers.MaxPooling2D((2, 2)))
     model.add(layers.Dropout(0.25))
 
@@ -96,7 +89,7 @@ def create_model():
     model.add(layers.Flatten())
     model.add(layers.Dense(64, activation='relu'))
     model.add(layers.Dropout(0.5))
-    model.add(layers.Dense(11, activation='softmax'))
+    model.add(layers.Dense(2, activation='softmax'))
 
     model.summary()
 
@@ -125,7 +118,7 @@ def plot_observations():
     plt.plot(history.history['val_loss'], label='val_loss ')
     plt.xlabel('Epoch')
     plt.ylabel('Loss')
-    # plt.show()
+    plt.show()
 
     plt.plot(history.history['acc'], label='accuracy')
     plt.plot(history.history['val_acc'], label='val_accuracy')
@@ -136,17 +129,16 @@ def plot_observations():
 
     test_loss, test_acc = model.evaluate(test_images, test_labels, verbose=2)
     print("Test Accuracy:", test_acc)
-    print("Test Loss:", test_loss)
-
 
 if __name__ == '__main__':
     """
     Main Method : Execution starts here
     """
-    images, labels = load_data("COVID-19 X-ray images")
-    min_width, min_height = get_smallest_dimensions()
 
-    (train_images, train_labels), (test_images, test_labels) = resize_images()
+    # load data
+    (train_images, train_labels), (test_images, test_labels) = load_radiography_data()
+
+    # pre-process data
     train_images, test_images, train_labels, test_labels = preprocess_data()
 
     # create CNN

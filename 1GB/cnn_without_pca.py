@@ -9,7 +9,7 @@ from tensorflow.keras import datasets, layers, models
 
 # Implementing CNN without PCA on radiography data (1GB data)
 
-def load_radiology_data():
+def load_radiography_data():
     """
     This method will load radiography data from "COVID-19 Radiography Database" folder
 
@@ -74,7 +74,7 @@ def create_model():
     model.add(layers.Dropout(0.25))
 
     model.add(layers.Flatten())
-    model.add(layers.Dense(128, activation='relu'))
+    model.add(layers.Dense(64, activation='relu'))
     model.add(layers.Dropout(0.5))
     model.add(layers.Dense(2, activation='softmax'))
 
@@ -124,7 +124,7 @@ if __name__ == '__main__':
     """
 
     # load data
-    (train_images, train_labels), (test_images, test_labels) = load_radiology_data()
+    (train_images, train_labels), (test_images, test_labels) = load_radiography_data()
 
     # pre-process data
     train_images, test_images, train_labels, test_labels = preprocess_data()
