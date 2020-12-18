@@ -1,3 +1,12 @@
+Install Anaconda Python 3.6 version
+https://conda.io/docs/user-guide/install/index.html
+
+Install Python 3.6
+https://www.python.org/downloads/release/python-360/
+
+Install Jupyter Notebook
+https://jupyter.org/install 
+
 # COVID-19 Diagnosis with Neural-Networks
 
 ## Abstract
@@ -45,7 +54,7 @@ SVMs (also known as support-vector networks) are supervised learning models with
 
 ### 2. K Nearest Neighbours (KNN):
 K-Nearest Neighbour is a Supervised Learning technique. It assumes the similarity between the new case/data and available cases and put the new case into the category that is most similar to the available categories. This algorithm stores all the available data and classifies a new data point based on the similarity. This means when new data appears then it can be easily classified into a well suite category by using K- NN algorithm. K-NN algorithm can be used for Regression as well as for Classification but mostly it is used for the Classification problems.
-![](Images/KNN.png)
+![](Images/KNN.JPG)
 
 ### 3. Random Forest:
 Random forests or random decision forests are an ensemble learning method for classification, regression and other tasks that operate by constructing a multitude of decision trees at training time and outputting the class that is the mode of the classes (classification) or mean/average prediction (regression) of the individual trees. Random decision forests correct for decision trees' habit of overfitting to their training set.
